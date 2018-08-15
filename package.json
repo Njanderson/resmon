@@ -1,0 +1,67 @@
+{
+    "name": "resourcemonitor",
+    "displayName": "Resource Monitor",
+    "description": "Displays current CPU usage and frequency, memory consumption, and battery percentage remaining.",
+    "version": "1.0.0",
+    "publisher": "mutantdino",
+    "engines": {
+        "vscode": "^1.25.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "*"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "Resource Monitor Configuration",
+            "properties": {
+                "resmon.showcpuusage": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Toggles the display of CPU Usage."
+                },
+                "resmon.showcpufreq": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Toggles the display of CPU frequency."
+                },
+                "resmon.showmem": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Toggles the display of memory consumption."
+                },
+                "resmon.showbattery": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Toggles the display of battery percentage remaining."
+                },
+                "resmon.updatefrequencyms": {
+                    "type": "number",
+                    "default": 2000,
+                    "minimum": 200,
+                    "description": "How long in ms between updates to resources."
+                }
+            }
+        }
+    },
+    "repository": ,
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.6",
+        "tslint": "^5.8.0",
+        "@types/node": "^7.0.43",
+        "@types/mocha": "^2.2.42",
+        "systeminformation": "^3.0.0"
+    }
+}
