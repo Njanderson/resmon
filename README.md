@@ -1,11 +1,11 @@
-# Resource Monitor README
+# Resource Monitor
 
 ## Features
 
-Display CPU frequency, usage, memory consumption, and battery percentage remaining.
+Display CPU frequency, usage, memory consumption, and battery percentage remaining within the VSCode status bar.
 
 ## Screenshots
-![An example of resmon running](example.png)
+![An example of resmon running](images/example.png)
 
 ## Requirements
 

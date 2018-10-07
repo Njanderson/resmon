@@ -10,6 +10,11 @@
     "categories": [
         "Other"
     ],
+    "icon": "images/icon.png",
+    "galleryBanner": {
+        "color": "#C80000",
+        "theme": "dark"
+    },
     "activationEvents": [
         "*"
     ],
