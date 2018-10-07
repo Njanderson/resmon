@@ -48,13 +48,19 @@
             }
         }
     },
-    "repository": ,
+    "repository": {
+        "type" : "git",
+        "url" : "https://github.com/Njanderson/resmon.git"
+    },
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "dependencies": {
+        "systeminformation": "^3.0.0"
     },
     "devDependencies": {
         "typescript": "^2.6.1",
