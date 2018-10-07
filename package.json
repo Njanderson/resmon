@@ -2,7 +2,7 @@
     "name": "resourcemonitor",
     "displayName": "Resource Monitor",
     "description": "Displays current CPU usage and frequency, memory consumption, and battery percentage remaining.",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "publisher": "mutantdino",
     "engines": {
         "vscode": "^1.25.0"
@@ -48,7 +48,7 @@
             }
         }
     },
-    "repository": ,
+    "repository": "https://github.com/Njanderson/resmon",
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
@@ -56,12 +56,14 @@
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
-    "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "tslint": "^5.8.0",
-        "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42",
+    "dependencies": {
         "systeminformation": "^3.0.0"
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.42",
+        "@types/node": "^7.0.43",
+        "tslint": "^5.8.0",
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.6"
     }
 }
