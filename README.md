@@ -27,6 +27,9 @@ A better solution for Windows CPU Usage would be great. I investigated alternati
 
 # Change Log
 
+## [1.0.4]
+- Added icon for store.
+
 ## [1.0.3]
 - Changed icons. Added choosable units.
 

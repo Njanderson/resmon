@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.0.4]
+- Added icon for store.
+
 ## [1.0.3]
 - Changed icons. Added choosable units.
 
