@@ -44,18 +44,33 @@
                     "default": 2000,
                     "minimum": 200,
                     "description": "How long in ms between updates to resources."
+                },
+                "resmon.frequnit": {
+                    "type": "string",
+                    "enum": [
+                        "GHz",
+                        "MHz",
+                        "KHz",
+                        "Hz"
+                    ],
+                    "default": "GHz"
+                },
+                "resmon.memunit": {
+                    "type": "string",
+                    "enum": [
+                        "GB",
+                        "MB",
+                        "KB",
+                        "B"
+                    ],
+                    "default": "GB"
                 }
             }
         }
     },
-<<<<<<< HEAD
-    "repository": "https://github.com/Njanderson/resmon",
-=======
     "repository": {
-        "type" : "git",
-        "url" : "https://github.com/Njanderson/resmon.git"
+        "url": "https://github.com/Njanderson/resmon.git"
     },
->>>>>>> 63d9982fc32513fb0a1f1227be0b5deef11f800b
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
@@ -67,6 +82,7 @@
         "systeminformation": "^3.0.0"
     },
     "devDependencies": {
+        "systeminformation": "^3.0.0",
         "@types/mocha": "^2.2.42",
         "@types/node": "^7.0.43",
         "tslint": "^5.8.0",

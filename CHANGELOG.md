@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.3]
+- Changed icons. Added choosable units.
+
+## [1.0.2]
+- Actually properly added systeminformation as a real dependency.
+
 ## [1.0.1]
 - Properly added systeminformation as a real dependency
 
