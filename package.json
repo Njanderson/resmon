@@ -48,7 +48,14 @@
             }
         }
     },
+<<<<<<< HEAD
     "repository": "https://github.com/Njanderson/resmon",
+=======
+    "repository": {
+        "type" : "git",
+        "url" : "https://github.com/Njanderson/resmon.git"
+    },
+>>>>>>> 63d9982fc32513fb0a1f1227be0b5deef11f800b
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
