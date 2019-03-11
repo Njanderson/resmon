@@ -1,78 +1,169 @@
 'use strict';
-import {window, ExtensionContext, StatusBarAlignment, StatusBarItem, workspace} from 'vscode';
+import {window, ExtensionContext, StatusBarAlignment, StatusBarItem, workspace, WorkspaceConfiguration} from 'vscode';
 var si = require('systeminformation');
         
 export function activate(context: ExtensionContext) {
-    context.subscriptions.push(new ResMon());
+    var resourceMonitor : ResMon = new ResMon();
+    resourceMonitor.StartUpdating();
+    context.subscriptions.push(resourceMonitor);
 }
 
 enum Units {
+    NoSuffix = 1,
     Kilo = 1024,
     Mega = 1024*1024,
     Giga = 1024*1024*1024
 }
 
-var FreqMappings = {
+interface UnitLookup {
+    [unit: string]: number;
+}  
+
+var FreqMappings : UnitLookup = {
     "GHz": Units.Giga,
     "MHz": Units.Mega,
     "KHz": Units.Kilo,
-    "Hz": 1
+    "Hz": Units.NoSuffix
 };
 
-var MemMappings = {
+var MemMappings : UnitLookup = {
     "GB": Units.Giga,
     "MB": Units.Mega,
     "KB": Units.Kilo,
-    "B": 1
+    "B": Units.NoSuffix
 };
+
+abstract class Resource {
+    protected _config : WorkspaceConfiguration;
+    protected _isShownByDefault : boolean;
+    protected _configKey : string;
+
+    constructor(config : WorkspaceConfiguration, isShownByDefault : boolean, configKey : string) {
+        this._config = config;
+        this._isShownByDefault = isShownByDefault;
+        this._configKey = configKey;
+    }
+
+    public async getResourceDisplay() : Promise<string | null> {
+        return this.isShown() ? this.getDisplay() : null;
+    }
+
+    protected async abstract getDisplay() : Promise<string>;
+
+    public isShown() : boolean {
+        return this._config.get(this._configKey, this._isShownByDefault);
+    }
+}
+
+class CpuUsage extends Resource {
+
+    constructor(config : WorkspaceConfiguration) {
+        super(config, true, "showcpuusage");
+    }
+    
+    async getDisplay() : Promise<string> {
+        let currentLoad = await si.currentLoad();
+        return `$(pulse) ${(100 - currentLoad.currentload_idle).toFixed(2)}%`;
+    }
+    
+}
+
+class CpuFreq extends Resource {
+
+    constructor(config : WorkspaceConfiguration) {
+        super(config, true, "showcpufreq");
+    }
+    
+    async getDisplay() : Promise<string> {    
+        let cpuData = await si.cpu();
+        // systeminformation returns frequency in terms of GHz by default
+        let speedHz = parseFloat(cpuData.speed)*Units.Giga;
+        let formattedWithUnits = this.getFormattedWithUnits(speedHz);
+        return `$(dashboard) ${(formattedWithUnits)}`;
+    }
+
+    getFormattedWithUnits(speedHz : number) : string {
+        var unit = this._config.get('frequnit', "GHz");
+        var freqDivisor : number = FreqMappings[unit];
+        return `${(speedHz/freqDivisor).toFixed(2)} ${unit}`;
+    }
+}
+
+class Battery extends Resource {
+
+    constructor(config : WorkspaceConfiguration) {
+        super(config, false, "showbattery");
+    }
+    
+    async getDisplay() : Promise<string> {
+        let rawBattery = await si.battery();
+        return `$(zap) ${rawBattery.percent}%`;
+    }
+}
+
+class Memory extends Resource {
+
+    constructor(config : WorkspaceConfiguration) {
+        super(config, true, "showmem");
+    }
+    
+    async getDisplay() : Promise<string> {
+        var memDivisor = MemMappings[this._config.get('memunit', "GB")];
+        let memoryData = await si.mem();
+        let memoryUsedWithUnits = memoryData.active/memDivisor;
+        let memoryTotalWithUnits = memoryData.total/memDivisor;
+        return  `$(ellipsis) ${(memoryUsedWithUnits).toFixed(2)}/${(memoryTotalWithUnits).toFixed(2)} GB`;
+    }
+
+}
+
 
 class ResMon {
     private _statusBarItem: StatusBarItem =  window.createStatusBarItem(StatusBarAlignment.Left);
+    private _config : WorkspaceConfiguration;
+    private _delimiter : string;
+    private _updating : boolean;
 
     constructor() {
-        this.update(this._statusBarItem);
         this._statusBarItem.show();
+        this._config = workspace.getConfiguration('resmon');
+        this._delimiter = "    ";
+        this._updating = false;
     }
 
-    private update(statusBarItem : StatusBarItem) {
-        let config = workspace.getConfiguration('resmon');
-        let stats = [];
-        if (config.get('showcpuusage', true)) {
-            let usage = si.currentLoad().then(
-                (data : any) => { return `$(pulse) ${(100 - data.currentload_idle).toFixed(2)}%`; }
-            );
-            stats.push(usage);
+    public StartUpdating() {
+        this._updating = true;
+        this.update(this._statusBarItem);
+    }
+
+    public StopUpdating() {
+        this._updating = false;
+    }
+
+    private async update(statusBarItem : StatusBarItem) {
+        if (this._updating) {
+            // Add all resources to monitor
+            let resources : Resource[] = [];
+            resources.push(new CpuUsage(this._config));
+            resources.push(new CpuFreq(this._config));
+            resources.push(new Battery(this._config));
+            resources.push(new Memory(this._config));
+
+            // Get the display of the requested resources
+            let pendingUpdates : Promise<string | null>[] = resources.map(resource => resource.getResourceDisplay());
+                
+            // Wait for the resources to update
+            await Promise.all(pendingUpdates).then(finishedUpdates => {
+                // Remove nulls, join with delimiter
+                statusBarItem.text = finishedUpdates.filter(update => update !== null).join(this._delimiter);
+            });
+
+            setTimeout(() => this.update(statusBarItem), this._config.get('updatefrequencyms', 2000));
         }
-        if (config.get('showcpufreq', true)) {
-            var freqDivisor = FreqMappings[config.get('frequnit', "GHz")];
-            let freq = si.cpu().then(
-                // systeminformation returns frequency in terms of GHz by default
-                (data : any) => { return `$(dashboard) ${(parseFloat(data.speed)/(freqDivisor/Units.Giga)).toFixed(2)} GHz`; }
-            );
-            stats.push(freq);
-        }
-        if (config.get('showmem', true)) {
-            var memDivisor = MemMappings[config.get('memunit', "GB")];
-            let mem = si.mem().then(
-                (data : any) => { return  `$(ellipsis) ${(data.used/memDivisor).toFixed(2)}/${(data.total/memDivisor).toFixed(2)} GB`; }
-            );
-            stats.push(mem);
-        }
-        if (config.get('showbattery', true)) {
-            let battery = si.battery().then(
-                (data : any) => { return `$(zap) ${data.percent}%`; }
-            );
-            stats.push(battery);
-        }
-        Promise.all(stats).then(
-            (data : any) => {
-                statusBarItem.text = data.join('   ');
-                setTimeout(() => this.update(statusBarItem), config.get('updatefrequencyms', 2000));
-            }
-        ).catch();
     }
 
     dispose() {
+        this.StopUpdating();
         this._statusBarItem.dispose();
     }
 }
