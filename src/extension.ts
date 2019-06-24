@@ -138,6 +138,15 @@ class Memory extends Resource {
     constructor(config: WorkspaceConfiguration) {
         super(config, true, "mem");
     }
+    
+    async getDisplay() : Promise<string> {
+        let unit = this._config.get('memunit', "GB")
+        var memDivisor = MemMappings[unit];
+        let memoryData = await si.mem();
+        let memoryUsedWithUnits = memoryData.active/memDivisor;
+        let memoryTotalWithUnits = memoryData.total/memDivisor;
+        return  `$(ellipsis) ${(memoryUsedWithUnits).toFixed(2)}/${(memoryTotalWithUnits).toFixed(2)} ${unit}`;
+    }
 
     async getDisplay(): Promise<string> {
         // Index into Units array with string to grab the divisor
@@ -163,6 +172,7 @@ class DiskSpace extends Resource {
         } else {
             return DiskSpaceFormat.PercentRemaining;
         }
+
     }
 
     getDrives(): string[] {
