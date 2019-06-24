@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.0.6]
+- Added DiskSpace, CPU Temperature. Adjusted battery icon.
+
 ## [1.0.5]
 - Refactored code heavily, addressed Github issue with memory.used versus memory.active.
 

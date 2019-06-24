@@ -1,8 +1,8 @@
 {
     "name": "resourcemonitor",
     "displayName": "Resource Monitor",
-    "description": "Displays current CPU usage and frequency, memory consumption, and battery percentage remaining.",
-    "version": "1.0.5",
+    "description": "Displays current CPU stats, memory/disk consumption, and battery percentage remaining.",
+    "version": "1.0.6",
     "publisher": "mutantdino",
     "engines": {
         "vscode": "^1.25.0"
@@ -24,25 +24,48 @@
             "type": "object",
             "title": "Resource Monitor Configuration",
             "properties": {
-                "resmon.showcpuusage": {
+                "resmon.show.cpuusage": {
                     "type": "boolean",
                     "default": true,
                     "description": "Toggles the display of CPU Usage."
                 },
-                "resmon.showcpufreq": {
+                "resmon.show.cpufreq": {
                     "type": "boolean",
                     "default": true,
                     "description": "Toggles the display of CPU frequency."
                 },
-                "resmon.showmem": {
+                "resmon.show.mem": {
                     "type": "boolean",
                     "default": true,
                     "description": "Toggles the display of memory consumption."
                 },
-                "resmon.showbattery": {
+                "resmon.show.battery": {
                     "type": "boolean",
                     "default": true,
                     "description": "Toggles the display of battery percentage remaining."
+                },
+                "resmon.show.disk": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Toggles the display of disk space information."
+                },
+                "resmon.show.cputemp": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Toggles the display of CPU temperature. May require launching VSCode as administrator.."
+                },
+                "resmon.disk.format": {
+                    "type": "string",
+                    "enum": [
+                        "PercentRemaining",
+                        "PercentUsed",
+                        "Remaining",
+                        "UsedOutOfTotal"
+                    ]
+                },
+                "resmon.disk.drives": {
+                    "type": "string[]",
+                    "default": []
                 },
                 "resmon.updatefrequencyms": {
                     "type": "number",
@@ -50,7 +73,7 @@
                     "minimum": 200,
                     "description": "How long in ms between updates to resources."
                 },
-                "resmon.frequnit": {
+                "resmon.freq.unit": {
                     "type": "string",
                     "enum": [
                         "GHz",
@@ -60,7 +83,7 @@
                     ],
                     "default": "GHz"
                 },
-                "resmon.memunit": {
+                "resmon.mem.unit": {
                     "type": "string",
                     "enum": [
                         "GB",
