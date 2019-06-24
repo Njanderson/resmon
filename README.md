@@ -5,7 +5,10 @@
 Display CPU frequency, usage, memory consumption, and battery percentage remaining within the VSCode status bar.
 
 ## Screenshots
-![An example of resmon running](images/example.png)
+![An example of resmon running](images/example.png).
+
+![Disk space feature](images/ResmonDiskSpaceScreenshot.png).
+
 
 ## Requirements
 
@@ -26,6 +29,9 @@ Just the systeminformation node module.
 A better solution for Windows CPU Usage would be great. I investigated alternatives to counting Processor Time, but none of them seemed to match the Task Manager percentage.
 
 # Change Log
+
+## [1.0.6]
+- Added DiskSpace, CPU Temperature. Adjusted battery icon.
 
 ## [1.0.5]
 - Refactored code heavily, addressed Github issue with memory.used versus memory.active.

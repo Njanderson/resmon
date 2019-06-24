@@ -1,8 +1,8 @@
 {
     "name": "resourcemonitor",
     "displayName": "Resource Monitor",
-    "description": "Displays current CPU usage and frequency, memory consumption, and battery percentage remaining.",
-    "version": "1.0.5",
+    "description": "Displays current CPU stats, memory/disk consumption, and battery percentage remaining.",
+    "version": "1.0.6",
     "publisher": "mutantdino",
     "engines": {
         "vscode": "^1.25.0"
