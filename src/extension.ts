@@ -139,15 +139,6 @@ class Memory extends Resource {
         super(config, true, "mem");
     }
     
-    async getDisplay() : Promise<string> {
-        let unit = this._config.get('memunit', "GB")
-        var memDivisor = MemMappings[unit];
-        let memoryData = await si.mem();
-        let memoryUsedWithUnits = memoryData.active/memDivisor;
-        let memoryTotalWithUnits = memoryData.total/memDivisor;
-        return  `$(ellipsis) ${(memoryUsedWithUnits).toFixed(2)}/${(memoryTotalWithUnits).toFixed(2)} ${unit}`;
-    }
-
     async getDisplay(): Promise<string> {
         // Index into Units array with string to grab the divisor
         var memDivisor = Units[this._config.get('mem.unit', "GB")];
