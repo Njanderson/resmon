@@ -18,7 +18,7 @@ abstract class Resource {
     }
 
     public async getResourceDisplay(): Promise<string | null> {
-        return this.isShown() ? this.getDisplay() : null;
+        return (await this.isShown()) ? this.getDisplay() : null;
     }
 
     protected async abstract getDisplay(): Promise<string>;
@@ -58,7 +58,10 @@ class CpuTemp extends Resource {
     }
 
     protected async isShown(): Promise<boolean> {
-        return Promise.resolve(this._config.get("show.cputemp", true));
+        // If the CPU temp sensor cannot retrieve a valid temperature, disallow its reporting.
+        var cpuTemp = (await si.cpuTemperature()).main;
+        let hasCpuTemp = cpuTemp !== -1;
+        return Promise.resolve(hasCpuTemp && this._config.get("show.cputemp", true));
     }
 
     async getDisplay(): Promise<string> {
@@ -94,19 +97,13 @@ class CpuFreq extends Resource {
 
 class Battery extends Resource {
 
-    private _hasBattery : boolean | null;
-     
     constructor(config: WorkspaceConfiguration) {
         super(config);
-        
-        this._hasBattery = null;
     }
 
     protected async isShown(): Promise<boolean> {
-        if (this._hasBattery === null) {
-            this._hasBattery = await si.battery().hasbattery;
-        }
-        return (this._hasBattery === null ? false : this._hasBattery) && this._config.get("show.battery", false);
+        let hasBattery = (await si.battery()).hasbattery;
+        return Promise.resolve(hasBattery && this._config.get("show.battery", false));
     }
 
     async getDisplay(): Promise<string> {

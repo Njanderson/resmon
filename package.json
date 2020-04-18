@@ -2,7 +2,7 @@
     "name": "resourcemonitor",
     "displayName": "Resource Monitor",
     "description": "Displays current CPU stats, memory/disk consumption, and battery percentage remaining.",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "publisher": "mutantdino",
     "engines": {
         "vscode": "^1.25.0"
@@ -107,7 +107,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "systeminformation": "^3.0.0"
+        "systeminformation": "^4.0.0"
     },
     "devDependencies": {
         "systeminformation": "^4.0.0",
