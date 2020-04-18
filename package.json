@@ -32,7 +32,7 @@
                 "resmon.show.cpufreq": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Toggles the display of CPU frequency."
+                    "description": "Toggles the display of CPU frequency. For Windows, this displays the maximum clock speed."
                 },
                 "resmon.show.mem": {
                     "type": "boolean",
@@ -42,7 +42,7 @@
                 "resmon.show.battery": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Toggles the display of battery percentage remaining."
+                    "description": "Toggles the display of battery percentage remaining if a device with a battery. If the device reports not having a battery, this setting will always be treated as false."
                 },
                 "resmon.show.disk": {
                     "type": "boolean",
@@ -110,7 +110,7 @@
         "systeminformation": "^3.0.0"
     },
     "devDependencies": {
-        "systeminformation": "^3.0.0",
+        "systeminformation": "^4.0.0",
         "@types/mocha": "^2.2.42",
         "@types/node": "^7.0.43",
         "tslint": "^5.8.0",
