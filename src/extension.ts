@@ -191,12 +191,20 @@ class DiskSpace extends Resource {
 
 
 class ResMon {
-    private _statusBarItem: StatusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
+    private _statusBarItem: StatusBarItem;
     private _config: WorkspaceConfiguration;
     private _delimiter: string;
     private _updating: boolean;
 
     constructor() {
+        if(this._config.get('alignLeft'))
+            this._statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
+        else
+            this._statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right);
+        
+        //Get color
+        this._statusBarItem.color = this._config.get('color');
+
         this._statusBarItem.show();
         this._config = workspace.getConfiguration('resmon');
         this._delimiter = "    ";
@@ -230,6 +238,9 @@ class ResMon {
             // Get the display of the requested resources
             let pendingUpdates: Promise<string | null>[] = resources.map(resource => resource.getResourceDisplay());
 
+            //change color
+            statusBarItem.color = this._config.get('color');
+            
             // Wait for the resources to update
             await Promise.all(pendingUpdates).then(finishedUpdates => {
                 // Remove nulls, join with delimiter

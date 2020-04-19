@@ -92,7 +92,17 @@
                         "B"
                     ],
                     "default": "GB"
-                }
+                },
+				"resmon.alignLeft": {
+					"type": "boolean",
+					"default": true,
+					"description": "Toggles the alignment of the status bar."
+				},
+				"resmon.color": {
+					"type": "string",
+					"default": "#FFFFFF",
+					"description": "Color of the status bar."					
+				}
             }
         }
     },
