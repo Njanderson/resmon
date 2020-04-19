@@ -2,7 +2,7 @@
     "name": "resourcemonitor",
     "displayName": "Resource Monitor",
     "description": "Displays current CPU stats, memory/disk consumption, and battery percentage remaining.",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "publisher": "mutantdino",
     "engines": {
         "vscode": "^1.25.0"
@@ -32,7 +32,7 @@
                 "resmon.show.cpufreq": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Toggles the display of CPU frequency."
+                    "description": "Toggles the display of CPU frequency. For Windows, this displays the maximum clock speed."
                 },
                 "resmon.show.mem": {
                     "type": "boolean",
@@ -42,7 +42,7 @@
                 "resmon.show.battery": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Toggles the display of battery percentage remaining."
+                    "description": "Toggles the display of battery percentage remaining if a device with a battery. If the device reports not having a battery, this setting will always be treated as false."
                 },
                 "resmon.show.disk": {
                     "type": "boolean",
@@ -112,10 +112,10 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "systeminformation": "^3.0.0"
+        "systeminformation": "^4.0.0"
     },
     "devDependencies": {
-        "systeminformation": "^3.0.0",
+        "systeminformation": "^4.0.0",
         "@types/mocha": "^2.2.42",
         "@types/node": "^7.0.43",
         "tslint": "^5.8.0",

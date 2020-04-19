@@ -1,5 +1,7 @@
 'use strict';
 import { window, ExtensionContext, StatusBarAlignment, StatusBarItem, workspace, WorkspaceConfiguration } from 'vscode';
+import { Units, DiskSpaceFormat, DiskSpaceFormatMappings, FreqMappings, MemMappings } from './constants';
+
 var si = require('systeminformation');
 
 export function activate(context: ExtensionContext) {
@@ -8,66 +10,24 @@ export function activate(context: ExtensionContext) {
     context.subscriptions.push(resourceMonitor);
 }
 
-enum Units {
-    B = 1,
-    KB = 1024,
-    MB = 1024 * 1024,
-    GB = 1024 * 1024 * 1024
-}
-
-enum DiskSpaceFormat {
-    PercentUsed,
-    PercentRemaining,
-    Remaining,
-    UsedOutOfTotal
-}
-
-interface DiskSpaceFormatLookup {
-    [unit: string]: DiskSpaceFormat;
-}
-
-var DiskSpaceFormatMappings: DiskSpaceFormatLookup = {
-    "PercentUsed": DiskSpaceFormat.PercentUsed,
-    "PercentRemaining": DiskSpaceFormat.PercentRemaining,
-    "Remaining": DiskSpaceFormat.Remaining,
-    "UsedOutOfTotal": DiskSpaceFormat.UsedOutOfTotal,
-};
-
-interface UnitLookup {
-    [unit: string]: number;
-}
-
-var FreqMappings: UnitLookup = {
-    "GHz": Units.GB,
-    "MHz": Units.MB,
-    "KHz": Units.KB,
-    "Hz": Units.B,
-};
-
 abstract class Resource {
     protected _config: WorkspaceConfiguration;
-    protected _isShownByDefault: boolean;
-    protected _configKey: string;
 
-    constructor(config: WorkspaceConfiguration, isShownByDefault: boolean, configKey: string) {
+    constructor(config: WorkspaceConfiguration) {
         this._config = config;
-        this._isShownByDefault = isShownByDefault;
-        this._configKey = configKey;
     }
 
     public async getResourceDisplay(): Promise<string | null> {
-        return this.isShown() ? this.getDisplay() : null;
+        return (await this.isShown()) ? this.getDisplay() : null;
     }
 
     protected async abstract getDisplay(): Promise<string>;
 
-    public isShown(): boolean {
-        return this._config.get("show." + this._configKey, this._isShownByDefault);
-    }
+    protected async abstract isShown(): Promise<boolean>;
 
     protected convertBytesToLargestUnit(bytes: number, precision: number = 2): string {
-        let unit: Units = Units.B;
-        while (bytes/unit >= 1024 && unit < Units.GB) {
+        let unit: Units = Units.None;
+        while (bytes/unit >= 1024 && unit < Units.G) {
             unit *= 1024;
         }
         return `${(bytes/unit).toFixed(precision)} ${Units[unit]}`;
@@ -77,7 +37,11 @@ abstract class Resource {
 class CpuUsage extends Resource {
 
     constructor(config: WorkspaceConfiguration) {
-        super(config, true, "cpuusage");
+        super(config);
+    }
+
+    protected async isShown(): Promise<boolean> {
+        return Promise.resolve(this._config.get("show.cpuusage", true));
     }
 
     async getDisplay(): Promise<string> {
@@ -90,26 +54,36 @@ class CpuUsage extends Resource {
 class CpuTemp extends Resource {
 
     constructor(config: WorkspaceConfiguration) {
-        super(config, true, "cputemp");
+        super(config);
+    }
+
+    protected async isShown(): Promise<boolean> {
+        // If the CPU temp sensor cannot retrieve a valid temperature, disallow its reporting.
+        var cpuTemp = (await si.cpuTemperature()).main;
+        let hasCpuTemp = cpuTemp !== -1;
+        return Promise.resolve(hasCpuTemp && this._config.get("show.cputemp", true));
     }
 
     async getDisplay(): Promise<string> {
         let currentTemps = await si.cpuTemperature();
         return `$(flame) ${(currentTemps.main).toFixed(2)} C`;
     }
-
 }
 
 class CpuFreq extends Resource {
 
     constructor(config: WorkspaceConfiguration) {
-        super(config, true, "cpufreq");
+        super(config);
+    }
+
+    protected async isShown(): Promise<boolean> {
+        return Promise.resolve(this._config.get("show.cpufreq", false));
     }
 
     async getDisplay(): Promise<string> {
-        let cpuData = await si.cpu();
+        let cpuCurrentSpeed = await si.cpuCurrentspeed();
         // systeminformation returns frequency in terms of GHz by default
-        let speedHz = parseFloat(cpuData.speed) * Units.GB;
+        let speedHz = parseFloat(cpuCurrentSpeed.avg) * Units.G;
         let formattedWithUnits = this.getFormattedWithUnits(speedHz);
         return `$(dashboard) ${(formattedWithUnits)}`;
     }
@@ -124,36 +98,49 @@ class CpuFreq extends Resource {
 class Battery extends Resource {
 
     constructor(config: WorkspaceConfiguration) {
-        super(config, false, "battery");
+        super(config);
+    }
+
+    protected async isShown(): Promise<boolean> {
+        let hasBattery = (await si.battery()).hasbattery;
+        return Promise.resolve(hasBattery && this._config.get("show.battery", false));
     }
 
     async getDisplay(): Promise<string> {
         let rawBattery = await si.battery();
-        return `$(plug) ${rawBattery.percent}%`;
+        var percentRemaining = Math.min(Math.max(rawBattery.percent, 0), 100);
+        return `$(plug) ${percentRemaining}%`;
     }
 }
 
 class Memory extends Resource {
 
     constructor(config: WorkspaceConfiguration) {
-        super(config, true, "mem");
+        super(config);
     }
     
-    async getDisplay(): Promise<string> {
-        // Index into Units array with string to grab the divisor
-        var memDivisor = Units[this._config.get('mem.unit', "GB")];
-        let memoryData = await si.mem();
-        let memoryUsedWithUnits = memoryData.active / memDivisor;
-        let memoryTotalWithUnits = memoryData.total / memDivisor;
-        return `$(ellipsis) ${(memoryUsedWithUnits).toFixed(2)}/${(memoryTotalWithUnits).toFixed(2)} GB`;
+    protected isShown(): Promise<boolean> {
+        return Promise.resolve(this._config.get("show.mem", true));
     }
-
+    
+    async getDisplay() : Promise<string> {
+        let unit = this._config.get('memunit', "GB");
+        var memDivisor = MemMappings[unit];
+        let memoryData = await si.mem();
+        let memoryUsedWithUnits = memoryData.active/memDivisor;
+        let memoryTotalWithUnits = memoryData.total/memDivisor;
+        return  `$(ellipsis) ${(memoryUsedWithUnits).toFixed(2)}/${(memoryTotalWithUnits).toFixed(2)} ${unit}`;
+    }
 }
 
 class DiskSpace extends Resource {
 
     constructor(config: WorkspaceConfiguration) {
-        super(config, false, "disk");
+        super(config);
+    }
+
+    protected isShown(): Promise<boolean> {
+        return Promise.resolve(this._config.get("show.disk", false));
     }
 
     getFormat(): DiskSpaceFormat {
@@ -163,7 +150,6 @@ class DiskSpace extends Resource {
         } else {
             return DiskSpaceFormat.PercentRemaining;
         }
-
     }
 
     getDrives(): string[] {
