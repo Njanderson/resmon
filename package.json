@@ -64,8 +64,13 @@
                     ]
                 },
                 "resmon.disk.drives": {
-                    "type": "string[]",
-                    "default": []
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "default": [],
+                    "description": "Drives to show. For example, 'C:' on Windows, and '/dev/sda1' on Linux."
                 },
                 "resmon.updatefrequencyms": {
                     "type": "number",
