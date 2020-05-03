@@ -207,7 +207,7 @@ class ResMon {
 
     public StartUpdating() {
         this._updating = true;
-        this.update(this._statusBarItem);
+        this.update();
     }
 
     public StopUpdating() {
@@ -227,7 +227,7 @@ class ResMon {
         return configColor;
     }
 
-    private async update(statusBarItem: StatusBarItem) {
+    private async update() {
         if (this._updating) {
 
             // Update the configuration in case it has changed
@@ -255,14 +255,14 @@ class ResMon {
 
             // Get the display of the requested resources
             let pendingUpdates: Promise<string | null>[] = resources.map(resource => resource.getResourceDisplay());
-            
+
             // Wait for the resources to update
-            await Promise.all(pendingUpdates).then(finishedUpdates => {
+            this._statusBarItem.text = await Promise.all(pendingUpdates).then(finishedUpdates => {
                 // Remove nulls, join with delimiter
-                statusBarItem.text = finishedUpdates.filter(update => update !== null).join(this._delimiter);
+                return finishedUpdates.filter(update => update !== null).join(this._delimiter);
             });
 
-            setTimeout(() => this.update(statusBarItem), this._config.get('updatefrequencyms', 2000));
+            setTimeout(() => this.update(), this._config.get('updatefrequencyms', 2000));
         }
     }
 
