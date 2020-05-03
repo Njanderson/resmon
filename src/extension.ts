@@ -197,18 +197,12 @@ class ResMon {
     private _updating: boolean;
 
     constructor() {
-        if(this._config.get('alignLeft'))
-            this._statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
-        else
-            this._statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right);
-        
-        //Get color
-        this._statusBarItem.color = this._config.get('color');
-
-        this._statusBarItem.show();
         this._config = workspace.getConfiguration('resmon');
         this._delimiter = "    ";
         this._updating = false;
+        this._statusBarItem = window.createStatusBarItem(this._config.get('alignLeft') ? StatusBarAlignment.Left : StatusBarAlignment.Right);
+        this._statusBarItem.color = this._getColor();
+        this._statusBarItem.show();
     }
 
     public StartUpdating() {
@@ -219,12 +213,36 @@ class ResMon {
     public StopUpdating() {
         this._updating = false;
     }
+    
+    private _getColor() : string {
+        const defaultColor = "#FFFFFF";
+
+        // Enforce #RRGGBB format
+        let hexColorCodeRegex = /^#[0-9A-F]{6}$/i;
+        let configColor = this._config.get('color', defaultColor);
+        if (!hexColorCodeRegex.test(configColor)) {
+            configColor = defaultColor;
+        }
+
+        return configColor;
+    }
 
     private async update(statusBarItem: StatusBarItem) {
         if (this._updating) {
 
             // Update the configuration in case it has changed
             this._config = workspace.getConfiguration('resmon');
+
+            // Update the status bar item's styling
+            let proposedAlignment = this._config.get('alignLeft') ? StatusBarAlignment.Left : StatusBarAlignment.Right;
+            if (proposedAlignment !== this._statusBarItem.alignment) {
+                this._statusBarItem.dispose();
+                this._statusBarItem = window.createStatusBarItem(proposedAlignment);
+                this._statusBarItem.color = this._getColor();
+                this._statusBarItem.show();
+            } else {
+                this._statusBarItem.color = this._getColor();
+            }
 
             // Add all resources to monitor
             let resources: Resource[] = [];
@@ -237,9 +255,6 @@ class ResMon {
 
             // Get the display of the requested resources
             let pendingUpdates: Promise<string | null>[] = resources.map(resource => resource.getResourceDisplay());
-
-            //change color
-            statusBarItem.color = this._config.get('color');
             
             // Wait for the resources to update
             await Promise.all(pendingUpdates).then(finishedUpdates => {

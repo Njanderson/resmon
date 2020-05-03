@@ -101,7 +101,7 @@
 				"resmon.color": {
 					"type": "string",
 					"default": "#FFFFFF",
-					"description": "Color of the status bar."					
+					"description": "Color of the status bar text in hex code (for example, #FFFFFF is white). The color must be in the format #RRGGBB, using hex digits."					
 				}
             }
         }

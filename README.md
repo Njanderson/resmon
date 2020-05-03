@@ -32,6 +32,9 @@ A better solution for Windows CPU Usage would be great. I investigated alternati
 
 ## Change Log
 
+### [1.0.7]
+- Changed underlying CPU frequency API, added hiding battery/CPU temp information if the device lacks a battery/doesn't support CPU temp sensing, added some clarifications about CPU frequency behavior on Windows.
+
 ### [1.0.6]
 
 - Added DiskSpace, CPU Temperature. Adjusted battery icon.
