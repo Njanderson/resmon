@@ -22,7 +22,7 @@
     "contributes": {
         "configuration": {
             "type": "object",
-            "title": "Resource Monitor Configuration",
+            "title": "Resource Monitor",
             "properties": {
                 "resmon.show.cpuusage": {
                     "type": "boolean",
@@ -52,7 +52,7 @@
                 "resmon.show.cputemp": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Toggles the display of CPU temperature. May require launching VSCode as administrator.."
+                    "description": "Toggles the display of CPU temperature. May not work without the lm-sensors module on Linux. May require running VS Code as admin on Windows"
                 },
                 "resmon.disk.format": {
                     "type": "string",
@@ -61,7 +61,8 @@
                         "PercentUsed",
                         "Remaining",
                         "UsedOutOfTotal"
-                    ]
+                    ],
+                    "description": "Configures how the disk space is displayed (percentage remaining/used, absolute remaining, used out of totel)."
                 },
                 "resmon.disk.drives": {
                     "type": "array",
