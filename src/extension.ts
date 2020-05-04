@@ -255,7 +255,7 @@ class ResMon {
 
             // Get the display of the requested resources
             let pendingUpdates: Promise<string | null>[] = resources.map(resource => resource.getResourceDisplay());
-asdfasdfasd
+
             // Wait for the resources to update
             this._statusBarItem.text = await Promise.all(pendingUpdates).then(finishedUpdates => {
                 // Remove nulls, join with delimiter
