@@ -106,7 +106,7 @@
                 "resmon.color": {
                     "type": "string",
                     "default": "#FFFFFF",
-                    "description": "Color of the status bar text in hex code (for example, #FFFFFF is white). The color must be in the format #RRGGBB, using hex digits."                    
+                    "description": "Color of the status bar text in hex code (for example, #FFFFFF is white). The color must be in the format #RRGGBB, using hex digits."
                 }
             }
         }
@@ -117,9 +117,8 @@
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+        "watch": "tsc -watch -p ./"
     },
     "dependencies": {
         "systeminformation": "^4.0.0"
