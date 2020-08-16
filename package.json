@@ -114,7 +114,7 @@
                     "default": "2",
                     "description": "Sets the float precision for display."
                 },
-                "resmon.cpuLeading0":{
+                "resmon.cpuLeading0": {
                     "type": "boolean",
                     "default": true,
                     "description": "Toggles a leading 0 on the CPU usage display."
@@ -128,16 +128,14 @@
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
         "watch": "tsc -watch -p ./"
     },
-
     "devDependencies": {
         "@types/mocha": "^8.0.2",
-        "@types/node": "^7.0.43",
-        "systeminformation": "^4.0.0",
+        "@types/node": "^7.10.11",
+        "@types/vscode": "^1.46.0",
+        "systeminformation": "^4.26.10",
         "tslint": "^5.20.1",
-        "typescript": "^2.6.1",
-        "@types/vscode": "^1.46.0"
+        "typescript": "^2.6.1"
     }
 }
