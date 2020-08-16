@@ -20,7 +20,7 @@ Just the system information node module.
 - `resmon.show.battery`: Show battery percentage remaining.
 - `resmon.show.disk`: Show disk space information.
 - `resmon.show.cputemp`: Show CPU temperature. May not work without the lm-sensors module on Linux. May require running VS Code as admin on Windows.
-- `resmon.disk.format`: Configures how the disk space is displayed (percentage remaining/used, absolute remaining, used out of totel).
+- `resmon.disk.format`: Configures how the disk space is displayed (percentage remaining/used, absolute remaining, used out of total).
 - `resmon.disk.drives`: Drives to show. For example, 'C:' on Windows, and '/dev/sda1' on Linux.
 - `resmon.updatefrequencyms`: How frequently to query systeminformation. The minimum is 200 ms as to prevent accidentally updating so fast as to freeze up your machine.
 - `resmon.freq.unit`: Unit used for the CPU frequency (GHz-Hz).
@@ -36,7 +36,12 @@ A better solution for Windows CPU Usage would be great. I investigated alternati
 
 ## Change Log
 
+### [1.0.8]
+
+- Fixed readme typos, code typos, set CPU Frequency to have a leading 0 if less than 10% issue: [#33](https://github.com/Njanderson/resmon/issues/33), removed a small [vulnerability](https://www.npmjs.com/advisories/1179), added option for issue: [#23](https://github.com/Njanderson/resmon/issues/230), and updated recommended VS Code module.
+
 ### [1.0.7]
+
 - Changed underlying CPU frequency API, added hiding battery/CPU temp information if the device lacks a battery/doesn't support CPU temp sensing, added some clarifications about CPU frequency behavior on Windows.
 
 ### [1.0.6]
@@ -53,7 +58,7 @@ A better solution for Windows CPU Usage would be great. I investigated alternati
 
 ### [1.0.3]
 
-- Changed icons. Added choosable units.
+- Changed icons. Added selectable units.
 
 ### [1.0.2]
 
