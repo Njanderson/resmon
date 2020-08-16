@@ -1,6 +1,19 @@
 'use strict';
-import { window, ExtensionContext, StatusBarAlignment, StatusBarItem, workspace, WorkspaceConfiguration } from 'vscode';
-import { Units, DiskSpaceFormat, DiskSpaceFormatMappings, FreqMappings, MemMappings } from './constants';
+import {
+    window,
+    ExtensionContext,
+    StatusBarAlignment,
+    StatusBarItem,
+    workspace,
+    WorkspaceConfiguration
+} from 'vscode';
+import {
+    Units,
+    DiskSpaceFormat,
+    DiskSpaceFormatMappings,
+    FreqMappings,
+    MemMappings
+} from './constants';
 
 var si = require('systeminformation');
 
@@ -10,6 +23,7 @@ export function activate(context: ExtensionContext) {
     context.subscriptions.push(resourceMonitor);
 }
 
+
 abstract class Resource {
     protected _config: WorkspaceConfiguration;
 
@@ -17,38 +31,73 @@ abstract class Resource {
         this._config = config;
     }
 
-    public async getResourceDisplay(): Promise<string | null> {
+    public async getResourceDisplay(): Promise < string | null > {
         return (await this.isShown()) ? this.getDisplay() : null;
     }
 
-    protected async abstract getDisplay(): Promise<string>;
+    protected abstract async getDisplay(): Promise < string > ;
 
-    protected async abstract isShown(): Promise<boolean>;
+    protected abstract async isShown(): Promise < boolean > ;
 
-    protected convertBytesToLargestUnit(bytes: number, precision: number = 2): string {
+    protected convertBytesToLargestUnit(
+        bytes: number,
+        precision: number = 2
+    ): string {
         let unit: Units = Units.None;
-        while (bytes/unit >= 1024 && unit < Units.G) {
+        while (bytes / unit >= 1024 && unit < Units.G) {
             unit *= 1024;
         }
-        return `${(bytes/unit).toFixed(precision)} ${Units[unit]}`;
+        return `${(bytes / unit).toFixed(precision)} ${Units[unit]}`;
+    }
+
+    async getPrecision(): Promise < number | undefined > {
+        return Promise.resolve(this._config.get("floatPrecision"));
+    }
+    async getLeading0(): Promise < boolean | undefined > {
+        return Promise.resolve(this._config.get("cpuLeading0"));
     }
 }
 
 class CpuUsage extends Resource {
-
     constructor(config: WorkspaceConfiguration) {
         super(config);
     }
 
-    protected async isShown(): Promise<boolean> {
+
+    protected async isShown(): Promise < boolean > {
         return Promise.resolve(this._config.get("show.cpuusage", true));
     }
 
-    async getDisplay(): Promise<string> {
+    async getDisplay(): Promise < string > {
         let currentLoad = await si.currentLoad();
-        return `$(pulse) ${(100 - currentLoad.currentload_idle).toFixed(2)}%`;
-    }
+        let floatPrecision = await this.getPrecision();
+        var Leading0 = await this.getLeading0();
+        Leading0 = Leading0;
+        var Case0;
+        //Shows a leading 0 if CPU usage is less than 10%
+        function CPUFormat() {
+            var CPULoad;
+            if (currentLoad.currentload_idle < 90) {
+                CPULoad = (100 - currentLoad.currentload_idle).toFixed(floatPrecision).toString();
+            }
+            if (currentLoad.currentload_idle > 90 || currentLoad.currentload_idle === 90) {
+                CPULoad = 0 + (100 - currentLoad.currentload_idle).toFixed(floatPrecision).toString();
+            }
+            return CPULoad;
+        }
 
+        if (Leading0 = true) {
+            Case0 = CPUFormat();
+        }
+        if (Leading0 = false) {
+            Case0 = ` ${(100 - currentLoad.currentload_idle)
+        .toFixed(floatPrecision)
+        .toString()}`;
+        }
+
+
+        return `$(pulse) ${Case0}%`;
+    }
 }
 
 class CpuTemp extends Resource {
@@ -57,16 +106,18 @@ class CpuTemp extends Resource {
         super(config);
     }
 
-    protected async isShown(): Promise<boolean> {
+    protected async isShown(): Promise < boolean > {
         // If the CPU temp sensor cannot retrieve a valid temperature, disallow its reporting.
         var cpuTemp = (await si.cpuTemperature()).main;
         let hasCpuTemp = cpuTemp !== -1;
         return Promise.resolve(hasCpuTemp && this._config.get("show.cputemp", true));
     }
 
-    async getDisplay(): Promise<string> {
+
+    async getDisplay(): Promise < string > {
         let currentTemps = await si.cpuTemperature();
-        return `$(flame) ${(currentTemps.main).toFixed(2)} C`;
+        let floatPrecision = await this.getPrecision();
+        return `$(flame) ${currentTemps.main.toFixed(floatPrecision)} C`;
     }
 }
 
@@ -76,11 +127,11 @@ class CpuFreq extends Resource {
         super(config);
     }
 
-    protected async isShown(): Promise<boolean> {
+    protected async isShown(): Promise < boolean > {
         return Promise.resolve(this._config.get("show.cpufreq", false));
     }
 
-    async getDisplay(): Promise<string> {
+    async getDisplay(): Promise < string > {
         let cpuCurrentSpeed = await si.cpuCurrentspeed();
         // systeminformation returns frequency in terms of GHz by default
         let speedHz = parseFloat(cpuCurrentSpeed.avg) * Units.G;
@@ -101,12 +152,12 @@ class Battery extends Resource {
         super(config);
     }
 
-    protected async isShown(): Promise<boolean> {
+    protected async isShown(): Promise < boolean > {
         let hasBattery = (await si.battery()).hasbattery;
         return Promise.resolve(hasBattery && this._config.get("show.battery", false));
     }
 
-    async getDisplay(): Promise<string> {
+    async getDisplay(): Promise < string > {
         let rawBattery = await si.battery();
         var percentRemaining = Math.min(Math.max(rawBattery.percent, 0), 100);
         return `$(plug) ${percentRemaining}%`;
@@ -118,18 +169,19 @@ class Memory extends Resource {
     constructor(config: WorkspaceConfiguration) {
         super(config);
     }
-    
-    protected isShown(): Promise<boolean> {
+
+    protected isShown(): Promise < boolean > {
         return Promise.resolve(this._config.get("show.mem", true));
     }
-    
-    async getDisplay() : Promise<string> {
+
+    async getDisplay(): Promise < string > {
         let unit = this._config.get('memunit', "GB");
         var memDivisor = MemMappings[unit];
         let memoryData = await si.mem();
-        let memoryUsedWithUnits = memoryData.active/memDivisor;
-        let memoryTotalWithUnits = memoryData.total/memDivisor;
-        return  `$(ellipsis) ${(memoryUsedWithUnits).toFixed(2)}/${(memoryTotalWithUnits).toFixed(2)} ${unit}`;
+        let memoryUsedWithUnits = memoryData.active / memDivisor;
+        let memoryTotalWithUnits = memoryData.total / memDivisor;
+        let floatPrecision = await this.getPrecision();
+        return `$(ellipsis) ${(memoryUsedWithUnits).toFixed(floatPrecision)}/${(memoryTotalWithUnits).toFixed(floatPrecision)} ${unit}`;
     }
 }
 
@@ -139,12 +191,12 @@ class DiskSpace extends Resource {
         super(config);
     }
 
-    protected isShown(): Promise<boolean> {
+    protected isShown(): Promise < boolean > {
         return Promise.resolve(this._config.get("show.disk", false));
     }
 
     getFormat(): DiskSpaceFormat {
-        let format: string | undefined = this._config.get<string>("disk.format");
+        let format: string | undefined = this._config.get < string > ("disk.format");
         if (format) {
             return DiskSpaceFormatMappings[format];
         } else {
@@ -153,7 +205,7 @@ class DiskSpace extends Resource {
     }
 
     getDrives(): string[] {
-        let drives: string[] | undefined = this._config.get<string[]>("disk.drives");
+        let drives: string[] | undefined = this._config.get < string[] > ("disk.drives");
         if (drives) {
             return drives;
         } else {
@@ -161,12 +213,13 @@ class DiskSpace extends Resource {
         }
     }
 
-    getFormattedDiskSpace(fsSize: any) {
+    async getFormattedDiskSpace(fsSize: any) {
+        let floatPrecision = await this.getPrecision();
         switch (this.getFormat()) {
             case DiskSpaceFormat.PercentRemaining:
-                return `${fsSize.fs} ${(100 - fsSize.use).toFixed(2)}% remaining`;
+                return `${fsSize.fs} ${(100 - fsSize.use).toFixed(floatPrecision)}% remaining`;
             case DiskSpaceFormat.PercentUsed:
-                return `${fsSize.fs} ${fsSize.use.toFixed(2)}% used`;
+                return `${fsSize.fs} ${fsSize.use.toFixed(floatPrecision)}% used`;
             case DiskSpaceFormat.Remaining:
                 return `${fsSize.fs} ${this.convertBytesToLargestUnit(fsSize.size - fsSize.used)} remaining`;
             case DiskSpaceFormat.UsedOutOfTotal:
@@ -174,7 +227,7 @@ class DiskSpace extends Resource {
         }
     }
 
-    async getDisplay(): Promise<string> {
+    async getDisplay(): Promise < string > {
         let fsSizes = await si.fsSize();
         let drives = this.getDrives();
         var formatted = "$(database) ";
@@ -182,7 +235,7 @@ class DiskSpace extends Resource {
         for (let fsSize of fsSizes) {
             // Drives were specified, check if this is an included drive
             if (drives.length === 0 || drives.indexOf(fsSize.fs) !== -1) {
-                formattedDrives.push(this.getFormattedDiskSpace(fsSize));
+                formattedDrives.push(await this.getFormattedDiskSpace(fsSize));
             }
         }
         return formatted + formattedDrives.join(", ");
@@ -213,8 +266,8 @@ class ResMon {
     public StopUpdating() {
         this._updating = false;
     }
-    
-    private _getColor() : string {
+
+    private _getColor(): string {
         const defaultColor = "#FFFFFF";
 
         // Enforce #RRGGBB format
@@ -254,7 +307,7 @@ class ResMon {
             resources.push(new CpuTemp(this._config));
 
             // Get the display of the requested resources
-            let pendingUpdates: Promise<string | null>[] = resources.map(resource => resource.getResourceDisplay());
+            let pendingUpdates: Promise < string | null > [] = resources.map(resource => resource.getResourceDisplay());
 
             // Wait for the resources to update
             this._statusBarItem.text = await Promise.all(pendingUpdates).then(finishedUpdates => {
@@ -272,5 +325,4 @@ class ResMon {
     }
 }
 
-export function deactivate() {
-}
+export function deactivate() {}

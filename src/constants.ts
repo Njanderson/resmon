@@ -2,9 +2,9 @@
 
 export enum Units {
     None = 1,
-    K = 1024,
-    M = 1024 * 1024,
-    G = 1024 * 1024 * 1024
+        K = 1024,
+        M = 1024 * 1024,
+        G = 1024 * 1024 * 1024
 }
 
 export enum DiskSpaceFormat {

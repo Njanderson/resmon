@@ -2,7 +2,7 @@
     "name": "resourcemonitor",
     "displayName": "Resource Monitor",
     "description": "Displays current CPU stats, memory/disk consumption, and battery percentage remaining.",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "publisher": "mutantdino",
     "engines": {
         "vscode": "^1.25.0"
@@ -62,7 +62,7 @@
                         "Remaining",
                         "UsedOutOfTotal"
                     ],
-                    "description": "Configures how the disk space is displayed (percentage remaining/used, absolute remaining, used out of totel)."
+                    "description": "Configures how the disk space is displayed (percentage remaining/used, absolute remaining, used out of total)."
                 },
                 "resmon.disk.drives": {
                     "type": "array",
@@ -108,6 +108,16 @@
                     "type": "string",
                     "default": "#FFFFFF",
                     "description": "Color of the status bar text in hex code (for example, #FFFFFF is white). The color must be in the format #RRGGBB, using hex digits."
+                },
+                "resmon.floatPrecision": {
+                    "type": "number",
+                    "default": "2",
+                    "description": "Sets the float precision for display."
+                },
+                "resmon.cpuLeading0": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Toggles a leading 0 on the CPU usage display."
                 }
             }
         }
@@ -118,18 +128,14 @@
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
         "watch": "tsc -watch -p ./"
     },
-    "dependencies": {
-        "systeminformation": "^4.0.0"
-    },
     "devDependencies": {
-        "systeminformation": "^4.0.0",
-        "@types/mocha": "^2.2.42",
-        "@types/node": "^7.0.43",
-        "tslint": "^5.8.0",
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6"
+        "@types/mocha": "^8.0.2",
+        "@types/node": "^7.10.11",
+        "@types/vscode": "^1.46.0",
+        "systeminformation": "^4.26.10",
+        "tslint": "^5.20.1",
+        "typescript": "^2.6.1"
     }
 }
