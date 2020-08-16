@@ -59,6 +59,7 @@ class CpuUsage extends Resource {
     let currentLoad = await si.currentLoad();
     let floatPrecision = await this.getPrecision();
     var Leading0 = await this.getLeading0();
+    Leading0 = Leading0;
     var Case0;
     //Shows a leading 0 if CPU usage is less than 10%
     function CPUFormat() {
