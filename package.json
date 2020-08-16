@@ -116,7 +116,7 @@
                 },
                 "resmon.cpuLeading0": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Toggles a leading 0 on the CPU usage display."
                 }
             }

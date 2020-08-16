@@ -76,9 +76,9 @@ class CpuUsage extends Resource {
     if (Leading0 = true){
         Case0 = CPUFormat();
     }
-    if (Leading0 = false) {Case0 = (100 - currentLoad.currentload_idle)
-                             .toFixed(floatPrecision)
-                             .toString();}
+    if (Leading0 = false) {Case0 = ` ${(100 - currentLoad.currentload_idle)
+        .toFixed(floatPrecision)
+        .toString()}`;}
 
 
       return `$(pulse) ${Case0}%`;
