@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"typescript.tsc.autoDetect": "off",
+		"cSpell.words": [
+			"Mbps",
+			"operstate"
+		]
+	}
+}
