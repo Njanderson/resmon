@@ -99,6 +99,11 @@
                     ],
                     "default": "GB"
                 },
+                "resmon.toggleNetwork": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Toggles if the network indicator is shown."
+                },
                 "resmon.alignLeft": {
                     "type": "boolean",
                     "default": true,
@@ -137,5 +142,8 @@
         "systeminformation": "^4.26.10",
         "tslint": "^5.20.1",
         "typescript": "^2.6.1"
+    },
+    "dependencies": {
+        "ts-node": "^8.10.2"
     }
 }

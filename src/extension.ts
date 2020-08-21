@@ -56,6 +56,8 @@ abstract class Resource {
     async getLeading0(): Promise < boolean | undefined > {
         return Promise.resolve(this._config.get("cpuLeading0"));
     }
+
+    async getDefaultInterface() { return si.networkInterfaceDefault();}
 }
 
 class CpuUsage extends Resource {
@@ -241,7 +243,93 @@ class DiskSpace extends Resource {
         return formatted + formattedDrives.join(", ");
     }
 }
+class Network extends Resource {
+    constructor(config: WorkspaceConfiguration) {
+        super(config);
+    }
 
+    protected isShown(): Promise < boolean > {
+        return Promise.resolve(this._config.get("toggleNetwork", true));
+    }
+
+    async getDisplay(): Promise < string > {
+        let networkData = await si.networkStats();
+
+        const timeMultiplier = this._config.get('updatefrequencyms', 2000) / 1000;
+        let networkTrueSpeedUp = networkData.tx_sec * timeMultiplier;
+        let networkTrueSpeedDown = networkData.rx_sec * timeMultiplier;
+
+        var networkSpeedUp:string = SpeedEval(networkTrueSpeedUp);
+        var networkSpeedDown:string = SpeedEval(networkTrueSpeedDown);
+        var UpUnit:string = UnitEval(networkTrueSpeedUp);
+        var DownUnit:string = UnitEval(networkTrueSpeedDown);
+
+        function SpeedEval(TrueSpeed: number) {
+            var networkSpeed;
+
+            function SpacingEval(trueSpeedTemp: number) {
+                var networkSpeedTemp;
+
+                if (trueSpeedTemp > 100 || trueSpeedTemp === 100) {
+                    networkSpeedTemp = trueSpeedTemp.toString();
+                }
+                if (trueSpeedTemp > 10 || trueSpeedTemp === 10) {
+                    networkSpeedTemp = " " + trueSpeedTemp.toString();
+                }
+                if (trueSpeedTemp < 10) {
+                    networkSpeedTemp = "  " + trueSpeedTemp.toString();
+                }
+                else{networkSpeedTemp = "0";}
+
+                return networkSpeedTemp;
+            }
+
+            if (TrueSpeed < 1000) {
+                networkSpeed = SpacingEval(TrueSpeed);
+            }
+
+            if (TrueSpeed > 1000 && TrueSpeed < 1000) {
+                networkSpeed = SpacingEval(~~(TrueSpeed / 1000));
+            }
+
+            if (TrueSpeed > 1000000 && TrueSpeed < 100000000) {
+                networkSpeed = SpacingEval(~~(TrueSpeed / 1000000));
+            }
+
+            if (TrueSpeed > 100000000) {
+                networkSpeed = SpacingEval(~~(TrueSpeed / 100000000));
+            } else {
+                networkSpeed = "0";
+            }
+
+            return networkSpeed;
+
+        }
+
+        function UnitEval(TrueSpeed: number) {
+            var Unit;
+            if (TrueSpeed < 1000) {
+                Unit = " Bps";
+            }
+            if (TrueSpeed > 1000 && TrueSpeed < 1000) {
+                Unit = "Kbps";
+            }
+
+            if (TrueSpeed > 1000000 && TrueSpeed < 100000000) {
+                Unit = "Mbps";
+            }
+
+            if (TrueSpeed > 100000000) {
+                Unit = "Gbps";
+            }
+            else{ Unit = " Bps";}
+
+            return Unit;
+        }
+
+        return `$(triangle-up) $(triangle-down) ${networkSpeedUp} ${UpUnit} / ${networkSpeedDown} ${DownUnit}`;
+    }
+}
 
 class ResMon {
     private _statusBarItem: StatusBarItem;
@@ -305,6 +393,7 @@ class ResMon {
             resources.push(new Memory(this._config));
             resources.push(new DiskSpace(this._config));
             resources.push(new CpuTemp(this._config));
+            resources.push(new Network(this._config));
 
             // Get the display of the requested resources
             let pendingUpdates: Promise < string | null > [] = resources.map(resource => resource.getResourceDisplay());
