@@ -122,10 +122,10 @@
         "watch": "tsc -watch -p ./"
     },
     "dependencies": {
-        "systeminformation": "^4.0.0"
+        "systeminformation": "^4.27.11"
     },
     "devDependencies": {
-        "systeminformation": "^4.0.0",
+        "systeminformation": "^4.27.11",
         "@types/mocha": "^2.2.42",
         "@types/node": "^7.0.43",
         "tslint": "^5.8.0",
