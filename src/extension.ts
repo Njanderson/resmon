@@ -1,5 +1,7 @@
 'use strict';
 import { window, ExtensionContext, StatusBarAlignment, StatusBarItem, workspace, WorkspaceConfiguration } from 'vscode';
+import { Units, DiskSpaceFormat, DiskSpaceFormatMappings, FreqMappings, MemMappings } from './constants';
+
 var si = require('systeminformation');
 
 export function activate(context: ExtensionContext) {
@@ -7,42 +9,6 @@ export function activate(context: ExtensionContext) {
     resourceMonitor.StartUpdating();
     context.subscriptions.push(resourceMonitor);
 }
-
-enum Units {
-    B = 1,
-    KB = 1024,
-    MB = 1024 * 1024,
-    GB = 1024 * 1024 * 1024
-}
-
-enum DiskSpaceFormat {
-    PercentUsed,
-    PercentRemaining,
-    Remaining,
-    UsedOutOfTotal
-}
-
-interface DiskSpaceFormatLookup {
-    [unit: string]: DiskSpaceFormat;
-}
-
-var DiskSpaceFormatMappings: DiskSpaceFormatLookup = {
-    "PercentUsed": DiskSpaceFormat.PercentUsed,
-    "PercentRemaining": DiskSpaceFormat.PercentRemaining,
-    "Remaining": DiskSpaceFormat.Remaining,
-    "UsedOutOfTotal": DiskSpaceFormat.UsedOutOfTotal,
-};
-
-interface UnitLookup {
-    [unit: string]: number;
-}
-
-var FreqMappings: UnitLookup = {
-    "GHz": Units.GB,
-    "MHz": Units.MB,
-    "KHz": Units.KB,
-    "Hz": Units.B,
-};
 
 abstract class Resource {
     protected _config: WorkspaceConfiguration;
@@ -58,13 +24,13 @@ abstract class Resource {
     }
 
     public async getResourceDisplay(): Promise<string | null> {
-        if (this.isShown())
+        if (await this.isShown())
         {
             let display: string = await this.getDisplay();
             this._maxWidth = Math.max(this._maxWidth, display.length);
 
             // Pad out to the correct length such that the length doesn't change
-            return display.padEnd(this._maxWidth, ' ');
+            return display.padEnd(this._maxWidth, ' ');
         }
 
         return null;
@@ -72,8 +38,8 @@ abstract class Resource {
 
     protected async abstract getDisplay(): Promise<string>;
 
-    public isShown(): boolean {
-        return this._config.get("show." + this._configKey, this._isShownByDefault);
+    protected async isShown(): Promise<boolean> {
+        return Promise.resolve(this._config.get(`show.${this._configKey}`, false));
     }
 
     public getPrecision(): number {
@@ -81,8 +47,8 @@ abstract class Resource {
     }
 
     protected convertBytesToLargestUnit(bytes: number, precision: number = 2): string {
-        let unit: Units = Units.B;
-        while (bytes/unit >= 1024 && unit < Units.GB) {
+        let unit: Units = Units.None;
+        while (bytes/unit >= 1024 && unit < Units.G) {
             unit *= 1024;
         }
         return `${(bytes/unit).toFixed(this.getPrecision())} ${Units[unit]}`;
@@ -108,23 +74,28 @@ class CpuTemp extends Resource {
         super(config, true, "cputemp");
     }
 
+    protected async isShown(): Promise<boolean> {
+        // If the CPU temp sensor cannot retrieve a valid temperature, disallow its reporting.
+        var cpuTemp = (await si.cpuTemperature()).main;
+        let hasCpuTemp = cpuTemp !== -1;
+        return Promise.resolve(hasCpuTemp && this._config.get("show.cputemp", true));
+    }
+
     async getDisplay(): Promise<string> {
         let currentTemps = await si.cpuTemperature();
         return `$(flame) ${(currentTemps.main).toFixed(this.getPrecision())} C`;
     }
-
 }
 
 class CpuFreq extends Resource {
-
     constructor(config: WorkspaceConfiguration) {
         super(config, true, "cpufreq");
     }
 
     async getDisplay(): Promise<string> {
-        let cpuData = await si.cpu();
+        let cpuCurrentSpeed = await si.cpuCurrentspeed();
         // systeminformation returns frequency in terms of GHz by default
-        let speedHz = parseFloat(cpuData.speed) * Units.GB;
+        let speedHz = parseFloat(cpuCurrentSpeed.avg) * Units.G;
         let formattedWithUnits = this.getFormattedWithUnits(speedHz);
         return `$(dashboard) ${(formattedWithUnits)}`;
     }
@@ -142,15 +113,15 @@ class Battery extends Resource {
         super(config, false, "battery");
     }
 
-    async getDisplay(): Promise<string> {
-        // Don't display anything if no battery exists
-        if (!si.hasbattery())
-        {
-            return "";
-        }
+    protected async isShown(): Promise<boolean> {
+        let hasBattery = (await si.battery()).hasbattery;
+        return Promise.resolve(hasBattery && this._config.get("show.battery", false));
+    }
 
+    async getDisplay(): Promise<string> {
         let rawBattery = await si.battery();
-        return `$(plug) ${rawBattery.percent}%`;
+        var percentRemaining = Math.min(Math.max(rawBattery.percent, 0), 100);
+        return `$(plug) ${percentRemaining}%`;
     }
 }
 
@@ -159,16 +130,15 @@ class Memory extends Resource {
     constructor(config: WorkspaceConfiguration) {
         super(config, true, "mem");
     }
-
-    async getDisplay(): Promise<string> {
-        // Index into Units array with string to grab the divisor
-        var memDivisor = Units[this._config.get('mem.unit', "GB")];
+    
+    async getDisplay() : Promise<string> {
+        let unit = this._config.get('memunit', "GB");
+        var memDivisor = MemMappings[unit];
         let memoryData = await si.mem();
         let memoryUsedWithUnits = memoryData.active / memDivisor;
         let memoryTotalWithUnits = memoryData.total / memDivisor;
-        return `$(ellipsis) ${(memoryUsedWithUnits).toFixed(this.getPrecision())}/${(memoryTotalWithUnits).toFixed(this.getPrecision())} GB`;
+        return `$(ellipsis) ${(memoryUsedWithUnits).toFixed(this.getPrecision())}/${(memoryTotalWithUnits).toFixed(this.getPrecision())} ${unit}`;
     }
-
 }
 
 class Network extends Resource {
@@ -194,7 +164,6 @@ class Network extends Resource {
         // Not implemented
         return ""; 
     }
-
 }
 
 class DiskSpace extends Resource {
@@ -251,53 +220,80 @@ class DiskSpace extends Resource {
 
 
 class ResMon {
-    private _statusBarItem: StatusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
+    private _statusBarItem: StatusBarItem;
     private _config: WorkspaceConfiguration;
     private _delimiter: string;
     private _updating: boolean;
+    private _resources: Resource[];
 
     constructor() {
-        this._statusBarItem.show();
         this._config = workspace.getConfiguration('resmon');
         this._delimiter = "    ";
         this._updating = false;
+        this._statusBarItem = window.createStatusBarItem(this._config.get('alignLeft') ? StatusBarAlignment.Left : StatusBarAlignment.Right);
+        this._statusBarItem.color = this._getColor();
+        this._statusBarItem.show();
+
+        // Add all resources to monitor
+        this._resources = [];
+        this._resources.push(new CpuUsage(this._config));
+        this._resources.push(new CpuFreq(this._config));
+        this._resources.push(new Battery(this._config));
+        this._resources.push(new Memory(this._config));
+        this._resources.push(new DiskSpace(this._config));
+        this._resources.push(new CpuTemp(this._config));
+        this._resources.push(new Network(this._config));
     }
 
     public StartUpdating() {
         this._updating = true;
-        this.update(this._statusBarItem);
+        this.update();
     }
 
     public StopUpdating() {
         this._updating = false;
     }
+    
+    private _getColor() : string {
+        const defaultColor = "#FFFFFF";
 
-    private async update(statusBarItem: StatusBarItem) {
+        // Enforce #RRGGBB format
+        let hexColorCodeRegex = /^#[0-9A-F]{6}$/i;
+        let configColor = this._config.get('color', defaultColor);
+        if (!hexColorCodeRegex.test(configColor)) {
+            configColor = defaultColor;
+        }
+
+        return configColor;
+    }
+
+    private async update() {
         if (this._updating) {
 
             // Update the configuration in case it has changed
             this._config = workspace.getConfiguration('resmon');
 
-            // Add all resources to monitor
-            let resources: Resource[] = [];
-            resources.push(new CpuUsage(this._config));
-            resources.push(new CpuFreq(this._config));
-            resources.push(new Battery(this._config));
-            resources.push(new Memory(this._config));
-            resources.push(new DiskSpace(this._config));
-            resources.push(new CpuTemp(this._config));
-            resources.push(new Network(this._config));
+            // Update the status bar item's styling
+            let proposedAlignment = this._config.get('alignLeft') ? StatusBarAlignment.Left : StatusBarAlignment.Right;
+            if (proposedAlignment !== this._statusBarItem.alignment) {
+                this._statusBarItem.dispose();
+                this._statusBarItem = window.createStatusBarItem(proposedAlignment);
+                this._statusBarItem.color = this._getColor();
+                this._statusBarItem.show();
+            } else {
+                this._statusBarItem.color = this._getColor();
+            }
 
             // Get the display of the requested resources
-            let pendingUpdates: Promise<string | null>[] = resources.map(resource => resource.getResourceDisplay());
+            let pendingUpdates: Promise<string | null>[] = this._resources.map(resource => resource.getResourceDisplay());
 
             // Wait for the resources to update
-            await Promise.all(pendingUpdates).then(finishedUpdates => {
+            this._statusBarItem.text = await Promise.all(pendingUpdates).then(finishedUpdates => {
                 // Remove nulls, join with delimiter
-                statusBarItem.text = finishedUpdates.filter(update => update !== null).join(this._delimiter);
+                return finishedUpdates.filter(update => update !== null).join(this._delimiter);
             });
 
-            setTimeout(() => this.update(statusBarItem), this._config.get('updatefrequencyms', 2000));
+            setTimeout(() => this.update(), this._config.get('updatefrequencyms', 2000));
         }
     }
 
