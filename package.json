@@ -92,6 +92,13 @@
                         "B"
                     ],
                     "default": "GB"
+                },
+                "resmon.show.precision": {
+                    "type": "number",
+                    "default": 2,
+                    "minimum": 0,
+                    "maximum": 2,
+                    "description": "How long in ms between updates to resources."
                 }
             }
         }
@@ -111,7 +118,6 @@
     },
     "devDependencies": {
         "systeminformation": "^3.0.0",
-        "@types/mocha": "^2.2.42",
         "@types/node": "^7.0.43",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",
