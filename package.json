@@ -89,6 +89,14 @@
                     ],
                     "default": "GHz"
                 },
+                "resmon.temp.unit": {
+                    "type": "string",
+                    "enum": [
+                        "C",
+                        "F"
+                    ],
+                    "default": "C"
+                },
                 "resmon.mem.unit": {
                     "type": "string",
                     "enum": [
@@ -132,9 +140,9 @@
         "systeminformation": "^4.27.11"
     },
     "devDependencies": {
-        "systeminformation": "^4.27.11",
         "@types/mocha": "^2.2.42",
-        "@types/node": "^7.0.43",
+        "@types/node": "^7.10.14",
+        "systeminformation": "^4.27.11",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",
         "vscode": "^1.1.6"
