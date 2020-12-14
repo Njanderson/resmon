@@ -83,7 +83,7 @@ class CpuTemp extends Resource {
 
     async getDisplay(): Promise<string> {
         let currentTemps = await si.cpuTemperature();
-        let unit = this._config.get('temp.unit',"C")
+        let unit = this._config.get('temp.unit',"C");
         let temp = null;
         if (unit === "F") {
             temp = this.CelsiusToFahrenheit(parseFloat(currentTemps.main));
