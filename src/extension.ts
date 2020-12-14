@@ -36,7 +36,7 @@ abstract class Resource {
         return null;
     }
 
-    protected async abstract getDisplay(): Promise<string>;
+    protected abstract getDisplay(): Promise<string>;
 
     protected async isShown(): Promise<boolean> {
         return Promise.resolve(this._config.get(`show.${this._configKey}`, false));
@@ -83,7 +83,18 @@ class CpuTemp extends Resource {
 
     async getDisplay(): Promise<string> {
         let currentTemps = await si.cpuTemperature();
-        return `$(flame) ${(currentTemps.main).toFixed(this.getPrecision())} C`;
+        let unit = this._config.get('temp.unit',"C")
+        let temp = null;
+        if (unit === "F") {
+            temp = this.CelsiusToFahrenheit(parseFloat(currentTemps.main));
+        } else {
+            temp = currentTemps.main;
+        }
+        return `$(flame) ${(temp).toFixed(this.getPrecision())} ${unit}`;
+    }
+    
+    CelsiusToFahrenheit(temp: number): number {
+        return temp*(9/5) + 32;
     }
 }
 
