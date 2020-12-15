@@ -85,12 +85,15 @@ class CpuTemp extends Resource {
         let currentTemps = await si.cpuTemperature();
         let unit = this._config.get('temp.unit',"C");
         let temp = null;
+        let unitWithSymbol = null;
         if (unit === "F") {
             temp = this.CelsiusToFahrenheit(parseFloat(currentTemps.main));
+            unitWithSymbol = '\u2109';
         } else {
             temp = currentTemps.main;
+            unitWithSymbol = '\u2103';
         }
-        return `$(flame) ${(temp).toFixed(this.getPrecision())} ${unit}`;
+        return `$(flame) ${(temp).toFixed(this.getPrecision())} ${unitWithSymbol}`;
     }
     
     CelsiusToFahrenheit(temp: number): number {
