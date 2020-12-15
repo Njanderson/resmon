@@ -89,6 +89,14 @@
                     ],
                     "default": "GHz"
                 },
+                "resmon.temp.unit": {
+                    "type": "string",
+                    "enum": [
+                        "C",
+                        "F"
+                    ],
+                    "default": "C"
+                },
                 "resmon.mem.unit": {
                     "type": "string",
                     "enum": [
